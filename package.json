@@ -1,0 +1,8 @@
+{
+  "name": "Chip-8",
+  "version": "1.0.0",
+  "main": "index.js",
+  "repository": "https://github.com/codertx/Chip-8.git",
+  "author": "codert <codert.sn@gmail.com>",
+  "license": "MIT"
+}
