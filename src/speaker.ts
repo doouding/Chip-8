@@ -13,12 +13,12 @@ export class Speaker {
         oscillator.frequency.value = frequency;
         oscillator.type = 'triangle';
         oscillator.connect(this.gain);
-        oscillator.start(0);
+        oscillator.start();
     }
 
     stop() {
         if(this.oscillator) {
-            this.oscillator.stop(0);
+            this.oscillator.stop();
             this.oscillator.disconnect(0);
             delete this.oscillator;
         }
