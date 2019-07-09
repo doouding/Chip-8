@@ -45,7 +45,6 @@ export class Keyboard {
             const keyCode = Keyboard.MAPPING[prop];
 
             if (keyCode === key) {
-                console.log(parseInt(prop));
                 this.onNextKeyPress(parseInt(prop), keyCode);
             }
         }
