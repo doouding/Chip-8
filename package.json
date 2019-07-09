@@ -4,5 +4,16 @@
   "main": "index.js",
   "repository": "https://github.com/codertx/Chip-8.git",
   "author": "codert <codert.sn@gmail.com>",
-  "license": "MIT"
+  "license": "MIT",
+  "scripts": {
+    "dev": "webpack-dev-server --config webpack.config.js"
+  },
+  "devDependencies": {
+    "awesome-typescript-loader": "^5.2.1",
+    "html-webpack-plugin": "^3.2.0",
+    "typescript": "^3.5.3",
+    "webpack": "^4.35.3",
+    "webpack-cli": "^3.3.5",
+    "webpack-dev-server": "^3.7.2"
+  }
 }

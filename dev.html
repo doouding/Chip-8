@@ -4,9 +4,17 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta http-equiv="X-UA-Compatible" content="ie=edge">
-  <script src="./src/index.js"></script>
   <title>Chip-8 Emulator</title>
+  <style>
+    #canvas {
+        width: 512px;
+        height: 256px;
+        image-rendering: pixelated;
+    }
+  </style>
 </head>
 <body>
+    <canvas id="canvas" width="64" height="32"></canvas>
+    <input type="file" id="file">
 </body>
 </html>
