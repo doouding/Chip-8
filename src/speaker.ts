@@ -8,6 +8,10 @@ export class Speaker {
     }
 
     play(frequency: number = 440) {
+        if(this.oscillator) {
+            return;
+        }
+
         const oscillator = this.oscillator = this.ctx.createOscillator();
 
         oscillator.frequency.value = frequency;
