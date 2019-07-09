@@ -29,22 +29,18 @@ fileEl.addEventListener('change', function fileChange() {
 
     const reader = new FileReader();
 
-    reader.addEventListener('load', (e) => {
-        chip8.reset();
-        chip8.rom 
-    }, false);
-    reader.onload = function(e) {
-        chip8.reset();
-        chip8.rom = new Uint8Array(reader.result as ArrayBuffer);
-        chip8.loadProgram(chip8.rom);
-
+    reader.onload = function() {
         if(chip8._loop) {
             cancelAnimationFrame(chip8._loop);
             chip8._loop = null;
         }
 
+        chip8.reset();
+        chip8.rom = new Uint8Array(reader.result as ArrayBuffer);
+        chip8.loadProgram(chip8.rom);
+
         chip8._loop = requestAnimationFrame(function loop() {
-            chip8.cycle();
+            chip8.loop();
             chip8._loop = requestAnimationFrame(loop);
         });
     };

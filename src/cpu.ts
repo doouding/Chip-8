@@ -41,13 +41,12 @@ export class CPU {
     // 暂停
     paused = false;
 
-    // 运行速度
-    speed = 10;
+    /**
+     * 一个 requestAnimationFrame 周期内执行几条指令
+     */
+    cycle = 10;
 
-
-    constructor() {
-
-    }
+    constructor() {}
 
     reset() {
         this.pc = 0x200;
@@ -95,8 +94,8 @@ export class CPU {
         }
     }
 
-    cycle() {
-        for (let i = 0; i < this.speed; i++) {
+    loop() {
+        for (let i = 0; i < this.cycle; i++) {
             if (!this.paused) {
                 const opcode = this.memory[this.pc] << 8 | this.memory[this.pc + 1];
                 this.perform(opcode);
@@ -381,7 +380,7 @@ export class CPU {
     }
 
     playSound() {
-        if (this.soundTimer > 0) {//只要soundTimer的值大于零，CHIP8蜂鸣器发声。
+        if (this.soundTimer > 0) {
             this.speaker.play();
         } else {
             this.speaker.stop();
