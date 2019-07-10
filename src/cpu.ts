@@ -246,24 +246,23 @@ export class CPU {
             },
             // Dxyn
             0xD000() {
-                let row, col, sprite
-                    , width = 8
-                    , height = opcode & 0x000F;//取得N（图案的高度）
+                const bytes = self.memory.slice(self.i, self.i + N);
+                const col = V[X];
+                const row = V[Y];
 
-                self.v[0xF] = 0;//初始化VF为0
+                V[0xF] = 0;
 
-                for (row = 0; row < height; row++) {//对于每一行
-                    sprite = self.memory[self.i + row];//取得内存I处的值，pixel中包含了一行的8个像素
-
-                    for (col = 0; col < width; col++) {//对于一行的8个像素 
-                        if ((sprite & 0x80) > 0) {//依次检查新值中每一位是否为1 
-                            if (self.screen.setPixel(self.v[X] + col, self.v[Y] + row)) {//如果显示缓存gfx[]里该像素也为1，则发生了碰撞
-                                self.v[0xF] = 1;//设置VF为1  
+                bytes.forEach((val: number, idx: number) => {
+                    for(let i = 0; i < 8; i++) {
+                        if((val & 0x80) > 0) {
+                            if(self.screen.setPixel(col + i, row + idx)) {
+                                V[0xF] = 1;
                             }
                         }
-                        sprite = sprite << 1;
+
+                        val = (val << 1);
                     }
-                }
+                });
             },
             0xE000() {
                 ({
