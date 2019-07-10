@@ -2,6 +2,10 @@ import { Screen } from './screen';
 import { Keyboard } from './keyboard';
 import { Speaker } from './speaker';
 
+interface IInstruction {
+    [index: number]: () => void;
+}
+
 export class CPU {
     // PC 寄存器
     pc = 0x200;
@@ -118,159 +122,131 @@ export class CPU {
         this.pc += 2;
 
         const self = this;
-        const x = (opcode & 0x0F00) >> 8;
-        const y = (opcode & 0x00F0) >> 4;
-        const NNN = opcode & 0x0FFF;
-        const NN = opcode & 0x00FF;
+        const V = self.v;
+        const NNN = opcode & 0x0fff;
+        const KK = opcode & 0x00ff;
+        const N = opcode & 0x000f;
+        const X = (opcode & 0x0F00) >> 8;
+        const Y = (opcode & 0x00F0) >> 4;
 
-        ({
-            0x0000() {
-                let r = ({
-                    //00E0
-                    //执行“清理屏幕”
-                    0x00E0() {
+        const instructions: IInstruction = {
+            0x000() {
+                const op = ({
+                    // 00E0
+                    0xE0() {
                         self.screen.clear();
                     },
-                    //00EE
-                    //执行“从子函数返回”
-                    0x00EE() {
+                    // 00EE
+                    0xEE() {
                         self.pc = self.stack.pop();
                     }
-                } as {
-                    [index: number]: () => void
-                })[opcode];
-                if (r) r();
+                } as IInstruction)[opcode & 0x00FF];
+
+                op && op();
             },
-            //1NNN
-            //跳转到地址:NNN
-            //例如：0x1222 则跳转到 0x0222
+            // 1nnn
             0x1000() {
                 self.pc = NNN;
             },
-            //2NNN
-            //解释器递增堆栈指针,然后跳转到地址:NNN
+            // 2nnn
             0x2000() {
                 self.stack.push(self.pc);
                 self.pc = NNN;
             },
-            //3XNN
-            // if(Vx==NN) 将程序计数器递增2 跳过
+            // 3xkk
             0x3000() {
-                if (self.v[x] == NN) self.pc += 2;
+                if(V[X] === KK) {
+                    self.pc += 2;
+                }
             },
-            //4XNN
-            //if(Vx!=NN)  将程序计数器递增2 跳过
+            // 4xkk
             0x4000() {
-                if (self.v[x] != NN) self.pc += 2;
+                if(V[X] !== KK) {
+                    self.pc += 2;
+                }
             },
-            //5XY0
-            //if(Vx==Vy) 将程序计数器递增2 跳过
+            // 5xy0
             0x5000() {
-                if (self.v[x] == self.v[y]) self.pc += 2;
+                if(V[X] === V[Y]) {
+                    self.pc += 2;
+                }
             },
-            //6XNN
-            //设置 Vx=NN
+            // 6xkk
             0x6000() {
-                self.v[x] = NN;
+                V[X] = KK;
             },
-            //7XNN
-            //设置 Vx+=NN
+            // 7xkk
             0x7000() {
-                self.v[x] += NN;
+                V[X] += KK;
             },
-            //8XY0
             0x8000() {
                 ({
-                    //8XY0
-                    //Vx=Vy
-                    0x0000() {
-                        self.v[x] = self.v[y];
+                    // 8xy0
+                    0() {
+                        V[X] = V[Y];
                     },
-                    //8XY1
-                    //设置 Vx=Vx|Vy
-                    0x0001() {
-                        self.v[x] = self.v[x] | self.v[y];
+                    // 8xy1
+                    1() {
+                        V[X] = V[X] | V[Y];
                     },
-                    //8XY2
-                    //Vx=Vx&Vy
-                    0x0002() {
-                        self.v[x] = self.v[x] & self.v[y];
+                    // 8xy2
+                    2() {
+                        V[X] = V[X] & V[Y];
                     },
-                    //8XY3
-                    //Vx=Vx^Vy
-                    0x0003() {
-                        self.v[x] = self.v[x] ^ self.v[y];
+                    // 8xy3
+                    3() {
+                        V[X] = V[X] ^ V[Y];
                     },
-                    //8XY4
-                    //Vx += Vy
-                    0x0004() {
-                        var sum = self.v[x] + self.v[y];
-                        if (sum > 0xFF) {//即VY+VX > 255 
-                            self.v[0xF] = 1;//出现了溢出，则把VF置为1
-                        } else {
-                            self.v[0xF] = 0;//没有溢出VF置为0
-                        }
-                        self.v[x] = sum;
+                    // 8xy4
+                    4() {
+                        const sum = V[X] + V[Y];
+
+                        V[0xF] = sum > 255 ? 1 : 0;
+                        V[X] = sum;
                     },
-                    //8XY5
-                    //Vx -= Vy
-                    0x0005() {
-                        if (self.v[x] > self.v[y]) {
-                            self.v[0xF] = 1;
-                        } else {
-                            self.v[0xF] = 0;
-                        }
-                        self.v[x] = self.v[x] - self.v[y];
+                    // 8xy5
+                    5() {
+                        V[0xF] = V[X] > V[Y] ? 1 : 0;
+                        V[X] = V[X] - V[Y];
                     },
-                    //8XY6
-                    //Vx=Vy=Vy>>1
-                    0x0006() {
-                        self.v[0xF] = self.v[x] & 0x01;
-                        self.v[x] = self.v[x] >> 1;
+                    // 8xy6
+                    6() {
+                        V[0xF] = V[X] & 0x1;
+                        V[X] = V[X] >> 1;
                     },
-                    //8XY7
-                    //Vx=Vy-Vx
-                    0x0007() {
-                        if (self.v[x] > self.v[y]) {
-                            this.v[0xF] = 0;
-                        } else {
-                            self.v[0xF] = 1;
-                        }
-                        self.v[x] = self.v[y] - self.v[x];
+                    // 8xy7
+                    7() {
+                        V[0xF] = V[Y] > V[X] ? 1 : 0;
+                        V[X] = V[Y] - V[X];
                     },
-                    //8XYE
-                    //Vx=Vy=Vy<<1
-                    0x000E() {
-                        self.v[0xF] = self.v[x] & 0x80;
-                        self.v[x] = self.v[x] << 1;
+                    // 8xyE
+                    0xE() {
+                        V[0xF] = V[X] & 0x80;
+                        V[X] = V[X] << 1;
                     }
-                } as {
-                    [index: number]: () => void
-                })[opcode & 0x000F]();
+                } as IInstruction)[opcode & 0xF]();
             },
-            //if(Vx!=Vy)  将程序计数器递增2 跳过
+            // 9xy0
             0x9000() {
-                if (self.v[x] != self.v[y]) self.pc += 2;
+                if(V[X] !== V[Y]) {
+                    self.pc += 2;
+                }
             },
-            //ANNN
-            //设置 I = NNN
+            // Annn
             0xA000() {
                 self.i = NNN;
             },
-            //BNNN
-            //跳转到的位置NNN + V0
+            // Bnnn
             0xB000() {
-                self.pc = NNN + self.v[0];
+                self.pc = NNN + V[0];
             },
-            //CXNN
-            //Vx=(随机0至255)&NN
+            // Cxkk
             0xC000() {
-                self.v[x] = Math.floor(Math.random() * 0xFF) & NN;
+                V[X] = Math.floor(Math.random() * 256) & KK;
             },
-            //DXYN
-            //绘画指令
+            // Dxyn
             0xD000() {
-                var row, col, sprite
+                let row, col, sprite
                     , width = 8
                     , height = opcode & 0x000F;//取得N（图案的高度）
 
@@ -281,7 +257,7 @@ export class CPU {
 
                     for (col = 0; col < width; col++) {//对于一行的8个像素 
                         if ((sprite & 0x80) > 0) {//依次检查新值中每一位是否为1 
-                            if (self.screen.setPixel(self.v[x] + col, self.v[y] + row)) {//如果显示缓存gfx[]里该像素也为1，则发生了碰撞
+                            if (self.screen.setPixel(self.v[X] + col, self.v[Y] + row)) {//如果显示缓存gfx[]里该像素也为1，则发生了碰撞
                                 self.v[0xF] = 1;//设置VF为1  
                             }
                         }
@@ -291,84 +267,64 @@ export class CPU {
             },
             0xE000() {
                 ({
-                    //EX9E
-                    //if(key()==Vx)  将程序计数器递增2 跳过
-                    0x009E() {
-                        if (self.input.isKeyPressed(self.v[x])) self.pc += 2;
+                    // Ex9E
+                    0x9E() {
+                        if(self.input.isKeyPressed(V[X])) {
+                            self.pc += 2;
+                        }
                     },
-                    //EXA1
-                    //if(key()!=Vx)  将程序计数器递增2 跳过
-                    0x00A1() {
-                        if (!self.input.isKeyPressed(self.v[x])) self.pc += 2;
+                    // ExA1
+                    0xA1() {
+                        if(!self.input.isKeyPressed(V[X])) {
+                            self.pc += 2;
+                        }
                     }
-                } as {
-                    [index: number]: () => void
-                })[NN]();
+                } as IInstruction)[opcode & 0x00FF]();
             },
             0xF000() {
                 ({
-                    //FX07
-                    //Vx = delayTimer
-                    0x0007() {
-                        self.v[x] = self.delayTimer;
+                    0x07() {
+                        V[X] = self.delayTimer;
                     },
-                    //FX0A
-                    //Vx =input_key
-                    0x000A() {
+                    0x0A() {
                         self.paused = true;
-                        self.input.onNextKeyPress = function(key: number) {
-                            self.v[x] = key;
+                        self.input.onNextKeyPress = (key: number) => {
+                            V[X] = key;
                             self.paused = false;
-                        }.bind(self);
-                    },
-                    //FX15
-                    //delayTimer=Vx                            
-                    0x0015() {
-                        self.delayTimer = self.v[x];
-                    },
-                    //FX18
-                    //soundTimer=Vx
-                    0x0018() {
-                        self.soundTimer = self.v[x];
-                    },
-                    //FX1E
-                    //I +=Vx
-                    0x001E() {
-                        self.i += self.v[x];
-                    },
-                    //FX29
-                    //I=sprite_addr[Vx],一般用4x5字体表示
-                    0x0029() {
-                        self.i = self.v[x] * 5;
-                    },
-                    //FX33
-                    //reg_dump(Vx,&I)   
-                    0x0033() {
-                        self.memory[self.i] = self.v[x] / 100;//取得十进制百位
-                        self.memory[self.i + 1] = self.v[x] % 100 / 10;//取得十进制十位
-                        self.memory[self.i + 2] = self.v[x] % 10;//取得十进制个位
-                    },
-                    //FX55
-                    //reg_load(Vx,&I)
-                    0x0055() {
-                        for (var i = 0; i <= x; i++) {
-                            self.memory[self.i + i] = self.v[i];
                         }
                     },
-                    //FX65
-                    //I +=Vx
-                    0x0065() {
-                        for (var i = 0; i <= x; i++) {
-                            self.v[i] = self.memory[self.i + i];
+                    0x15() {
+                        self.delayTimer = V[X];
+                    },
+                    0x18() {
+                        self.soundTimer = V[X];
+                    },
+                    0x1E() {
+                        self.i += V[X];
+                    },
+                    0x29() {
+                        self.i = V[X] * 5;
+                    },
+                    0x33() {
+                        self.memory[self.i] = V[X] / 100;
+                        self.memory[self.i + 1] = V[X] % 100 / 10;
+                        self.memory[self.i + 2] = V[X] % 10;
+                    },
+                    0x55() {
+                        for (let i = 0; i <= X; i++) {
+                            self.memory[self.i + i] = V[i];
+                        }
+                    },
+                    0x65() {
+                        for (let i = 0; i <= X; i++) {
+                            V[i] = self.memory[self.i + i];
                         }
                     }
-                } as {
-                    [index: number]: () => void
-                })[NN]();
+                } as IInstruction)[opcode & 0x00FF]();
             }
-        } as {
-            [index: number]: () => void
-        })[opcode & 0xF000]();
+        }
+
+        instructions[0xF000 & opcode]()
     }
 
     /**
