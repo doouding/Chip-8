@@ -9,18 +9,18 @@ export class Keyboard {
         0x2: '2',
         0x3: '3',
         0xC: '4',
-        0x4: 'Q',
-        0x5: 'W',
-        0x6: 'E',
-        0xD: 'R',
-        0x7: 'A',
-        0x8: 'S',
-        0x9: 'D',
-        0xE: 'F',
-        0xA: 'Z',
-        0x0: 'X',
-        0xB: 'C',
-        0xF: 'V'
+        0x4: 'q',
+        0x5: 'w',
+        0x6: 'e',
+        0xD: 'r',
+        0x7: 'a',
+        0x8: 's',
+        0x9: 'd',
+        0xE: 'f',
+        0xA: 'z',
+        0x0: 'x',
+        0xB: 'c',
+        0xF: 'v'
     };
 
     constructor() {}

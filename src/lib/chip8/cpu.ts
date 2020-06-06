@@ -1,4 +1,4 @@
-import { Screen } from './screen';
+import { ScrennBuffer } from './screen';
 import { Keyboard } from './keyboard';
 import { Speaker } from './speaker';
 
@@ -10,8 +10,6 @@ export class CPU {
     // PC 寄存器
     pc = 0x200;
 
-    _loop: number | null = null;
-
     // 堆栈指针
     stack: number[] = [];
 
@@ -19,7 +17,7 @@ export class CPU {
     rom: Uint8Array = new Uint8Array(0);
 
     // 显示（输出）
-    screen: Screen = new Screen();
+    screen: ScrennBuffer = new ScrennBuffer();
 
     // 键盘（输入）
     input: Keyboard = new Keyboard();
@@ -50,7 +48,11 @@ export class CPU {
      */
     cycle = 10;
 
-    constructor() {}
+    render: () => any;
+
+    constructor(render: () => any) {
+        this.render = render;
+    }
 
     reset() {
         this.pc = 0x200;
@@ -112,10 +114,6 @@ export class CPU {
 
         this.playSound();
         this.render();
-    }
-
-    render() {
-        this.screen.render();
     }
 
     perform(opcode: number) {

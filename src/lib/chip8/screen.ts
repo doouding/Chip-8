@@ -1,4 +1,4 @@
-export class Screen {
+export class ScrennBuffer {
     rows: number = 32;
     columns: number = 64;
     resolution: number = this.rows * this.columns;
@@ -11,8 +11,6 @@ export class Screen {
     clear() {
         this.bitMap = new Array(this.resolution).fill(0);
     }
-
-    render() {}
 
     private overflow(x: number, y: number) {
         if (x > this.columns - 1) {
