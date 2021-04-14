@@ -1,5 +1,5 @@
 # Chip-8
-A Chip-8 emulator written with react and typescript. You can play it [here](https://codertx.github.io/Chip-8/)
+A Chip-8 emulator written with react and typescript. You can play it [here](https://doouding.github.io/Chip-8/)
 
 ## Reference
 
